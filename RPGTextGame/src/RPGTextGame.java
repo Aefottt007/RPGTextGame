@@ -1,66 +1,149 @@
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 public class RPGTextGame {
-    private static final String[] monsterNames = {"涛姐", "天齐姐", "国林姐姐", "煜姐姐", "哲姐姐"};
-    private static final int bloodGrid = 20;//创建显示血量的格子总长度
-    private static Player player;
-    private static Monster monster;
+    private static final String[] monsterNames = {"涛姐", "天齐姐", "国林姐姐", "煜姐姐", "哲姐姐", "林潼姐姐"};
+    private static int flag = 0;//1代表玩家胜利，2代表怪物胜利
+    private static int reLife = 3;//可复活次数
+    private static int award = 0;//记录玩家一共打败的怪物数
 
-    public static void main(String[] args) {
-        playerCreate();//创建玩家角色信息
-        monsterCreate();//随机创建怪物信息
-        System.out.println("你遇见了【"+monster.getName()+"】");
-        for (int i = 1; player.getBlood() > 0 && monster.getBlood() > 0; i++) {
-            round(i);//开始第i回合
+    public static void sleep(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        System.out.println("游戏结束");
     }
 
-    private static void playerCreate() {
+    public static void main(String[] args) {
         System.out.println("欢迎来到《RPGTextGame》\n");
+        Player player = createPlayer();
+        System.out.println("角色创建完毕，开始您的游戏之旅吧。");
+        while (player.getHP() > 0) {
+            sleep(300);
+            ArrayList<Monster> monsters = new ArrayList<>();
+            //随机生成1到3个怪物
+            int i;
+            int monsterNum = (int) (Math.random() * 3 + 1);
+            for (i = 0; i < monsterNum ; i++){
+                monsters.add(createMonster());
+            }
+            System.out.println("新的怪物已生成，勇敢的【" + player.getName() + "】，快去挑战他们叭！");
+            sleep(300);
+            for (i = 0; i < monsterNum ; i++){
+                System.out.println((i+1)+".【注意】您遇见了带有【" + monsters.get(i).getEquip() + "】的" + monsters.get(i).getName());
+            }
+            while (flag == 0) {
+                player.show();
+                for (i = 0; i < monsterNum ; i++){
+                    monsters.get(i).show();
+                }
+                sleep(300);
+                //随机指定一个怪物攻击
+                int attackedMon = (int)(Math.random()*monsterNum);
+                //玩家的回合
+                player.attack(player, monsters.get(attackedMon));
+                sleep(300);
+                //怪物的回合
+                for (i = 0; i < monsterNum ; i++){
+                    if (monsters.get(i).getHP() > 0) {
+                        monsters.get(i).attack(player, monsters.get(i));
+                    } else {
+                        award += 1;
+                        System.out.println("【"+monsters.get(i).getName()+"】已战死。");
+                        monsters.remove(i);
+                        if(monsterNum>0) monsterNum -= 1;
+                    }
+                }
+                //如果怪物全部都已经被打败的话
+                if(monsterNum==0){
+                    flag = 1;
+                    System.out.println("【" + player.getName() + "】获得了胜利！");
+                    break;
+                }
+                if (player.getHP() <= 0) {
+                    flag = 2;
+                    System.out.println(monsters.get(attackedMon).getName() + "获得了胜利！");
+                    break;
+                }
+                sleep(200);
+            }
+            if (reLife > 0 && player.getHP() <= 0) {
+                player.setHP(player.getHPMax());
+                player.setDefine(player.getDefine() + 10);
+                reLife -= 1;
+                System.out.println("【来自曙光女神的庇护】您已复活一次，剩余复活次数：" + reLife);
+            } else if (reLife <= 0 && player.getHP() <= 0) {
+                System.out.println("勇士，您已战败......");
+                break;
+            }
+            flag = 0;
+            sleep(500);
+        }
+        System.out.println("您共计打败【"+award+"】只怪物，好样的，勇士！");
+    }
+
+    /*
+     **创建玩家信息
+     */
+    private static Player createPlayer() {
         System.out.println("请先创建玩家角色：\n");
         Scanner sc = new Scanner(System.in);
         System.out.println("您的玩家名称为：");
         String name = sc.nextLine();
         System.out.println("\n您的生命值：");
         int bloodInit = sc.nextInt();
+        while (bloodInit > 9999 || bloodInit < 0) {
+            System.out.println("请输入合理的血量值...");
+            bloodInit = sc.nextInt();
+        }
         System.out.println("\n您的攻击力：");
         int attack = sc.nextInt();
+        while (attack > 999 || attack < 0) {
+            System.out.println("请输入合理的攻击值...");
+            attack = sc.nextInt();
+        }
         System.out.println("\n您的防御力：");
         int define = sc.nextInt();
+        while (define > 999 || define < 0) {
+            System.out.println("请输入合理的防御值...");
+            define = sc.nextInt();
+        }
         //创建玩家角色
-        player = new Player(name, bloodInit, attack, define);
-        System.out.println("角色创建完毕，开始您的游戏之旅吧。");
+        return new Player(name, bloodInit, attack, define);
     }
 
-    private static void monsterCreate() {
-        //创建怪物的随机属性值
-        monster = new Monster(monsterNames[(int) (Math.random() * (monsterNames.length - 1))], (int) (Math.random() * 98) + 1, (int) (Math.random() * 98) + 1);
-        System.out.println("新的怪物已生成，勇敢的【" + player.getName() + "】，快去挑战他们叭！");
+    /*
+     **随机生成怪物属性
+     */
+    private static Monster createMonster() {
+        return new Monster(monsterNames[(int) (Math.random() * monsterNames.length)],
+                (int) (Math.random() * 60) + 60,
+                (int) (Math.random() * 10) + 1,
+                (int) (Math.random() * 19 + 1),
+                (int) (Math.random() * 5));
     }
 
-    private static void round(int i) {
-        System.out.println("===第"+i+"回合===");
-        showBlood();//显示玩家和怪物的血量
-        System.out.println("现在是你的回合");
-        monster.setBlood(monster.getBlood()-player.getAttack());
-        System.out.println("你对【"+monster.getName()+"】造成了"+player.getAttack()+"点伤害，现在轮到【"+monster.getName()+"】的回合了");
-        player.setBlood(player.getBlood()-(monster.getAttack()-player.getDefine()));
-        System.out.println("【"+monster.getName()+"】对你造成了"+(monster.getAttack()-player.getDefine())+"点伤害");
-        System.out.println("第"+i+"回合结束");
-    }
-
-    private static void showBlood(){
-        int j;
-        //显示玩家的血量
-        System.out.print("你的血量为：");
-        float blood_percent_player = (float) player.getBlood() / player.getBloodInit();
-        for(j=0;j<bloodGrid*blood_percent_player;j++) System.out.print("|");
-        System.out.println();
-        //显示怪物的血量
-        System.out.print("【"+monster.getName()+"】的血量为：");
-        int blood_percent_monster = monster.getBlood() / monster.getBloodInit();
-        for(j=0;j<bloodGrid*blood_percent_monster;j++) System.out.print("|");
-        System.out.println();
-    }
+//    /*
+//    **展示选择界面:
+//    * 1.未战斗状态下的菜单
+//    * 2.战斗状态下的菜单
+//    * 3.使用道具菜单 ->暂未开启
+//    * 4.选择攻击的怪物菜单 -> 暂时只支持单个怪物
+//    * 5.展示商店物品菜单
+//    * 6.展示玩家的属性
+//     */
+//    private static void showChoice(int choice){
+//        switch (choice) {
+//            case 1 -> System.out.println("勇士，接下来您想 1.探索 2.商店 3.属性 4.退出？");
+//            case 2 -> System.out.println("勇士，接下来您想 1.选择攻击怪物 2.使用道具(暂未开启) 3.逃跑？");
+//            case 3 -> System.out.println("暂未开启");
+//            case 4 -> System.out.println("1."+monster.getName());
+//            case 5 -> System.out.println("商店系统暂未开启");
+//            case 6 -> System.out.println("玩家【"+player.getName()+"】\n"
+//                    +"当前血量："+player.getBlood()+"\n"
+//                    +"攻击力："+player.getAttack()+"   防御力："+player.getDefine());
+//        }
+//    }
 }
