@@ -1,6 +1,6 @@
 # 红岩移动第二次作业
 
-## RPGTextGame
+## RPGTextGame 自动打怪文字游戏
 
 #### 1.0
 
