@@ -26,45 +26,46 @@ public class RPGTextGame {
             //随机生成1到3个怪物
             int i;
             int monsterNum = (int) (Math.random() * 3 + 1);
-            for (i = 0; i < monsterNum ; i++){
+            for (i = 0; i < monsterNum; i++) {
                 monsters.add(createMonster());
             }
             System.out.println("新的怪物已生成，勇敢的【" + player.getName() + "】，快去挑战他们叭！");
             sleep(300);
-            for (i = 0; i < monsterNum ; i++){
-                System.out.println((i+1)+".【注意】您遇见了带有【" + monsters.get(i).getEquip() + "】的" + monsters.get(i).getName());
+            for (i = 0; i < monsterNum; i++) {
+                System.out.println((i + 1) + ".【注意】您遇见了带有【" + monsters.get(i).getEquip() + "】的" + monsters.get(i).getName());
             }
             while (flag == 0) {
                 player.show();
-                for (i = 0; i < monsterNum ; i++){
+                for (i = 0; i < monsterNum; i++) {
                     monsters.get(i).show();
                 }
                 sleep(300);
                 //随机指定一个怪物攻击
-                int attackedMon = (int)(Math.random()*monsterNum);
+                int attackedMon = (int) (Math.random() * monsterNum);
                 //玩家的回合
                 player.attack(player, monsters.get(attackedMon));
                 sleep(300);
                 //怪物的回合
-                for (i = 0; i < monsterNum ; i++){
+                for (i = 0; i < monsterNum; i++) {
                     if (monsters.get(i).getHP() > 0) {
                         monsters.get(i).attack(player, monsters.get(i));
+                        if(player.getHP()<=0) break;
                     } else {
                         award += 1;
-                        System.out.println("【"+monsters.get(i).getName()+"】已战死。");
+                        System.out.println("【" + monsters.get(i).getName() + "】已战死。");
                         monsters.remove(i);
-                        if(monsterNum>0) monsterNum -= 1;
+                        if (monsterNum > 0) monsterNum -= 1;
                     }
                 }
                 //如果怪物全部都已经被打败的话
-                if(monsterNum==0){
+                if (monsterNum == 0) {
                     flag = 1;
                     System.out.println("【" + player.getName() + "】获得了胜利！");
                     break;
                 }
                 if (player.getHP() <= 0) {
                     flag = 2;
-                    System.out.println(monsters.get(attackedMon).getName() + "获得了胜利！");
+                    System.out.println(monsters.get(i).getName() + "获得了胜利！");
                     break;
                 }
                 sleep(200);
@@ -81,7 +82,7 @@ public class RPGTextGame {
             flag = 0;
             sleep(500);
         }
-        System.out.println("您共计打败【"+award+"】只怪物，好样的，勇士！");
+        System.out.println("您共计打败【" + award + "】只怪物，好样的，勇士！");
     }
 
     /*
@@ -92,20 +93,38 @@ public class RPGTextGame {
         Scanner sc = new Scanner(System.in);
         System.out.println("您的玩家名称为：");
         String name = sc.nextLine();
+        //生命值判断
         System.out.println("\n您的生命值：");
-        int bloodInit = sc.nextInt();
+        int bloodInit;
+        while (!sc.hasNextInt()) {
+            System.out.println("请输入合理的血量值...");
+            sc = new Scanner(System.in);
+        }
+        bloodInit = sc.nextInt();
         while (bloodInit > 9999 || bloodInit < 0) {
             System.out.println("请输入合理的血量值...");
             bloodInit = sc.nextInt();
         }
+        //攻击力判断
         System.out.println("\n您的攻击力：");
-        int attack = sc.nextInt();
+        int attack;
+        while (!sc.hasNextInt()) {
+            System.out.println("请输入合理的攻击值...");
+            sc = new Scanner(System.in);
+        }
+        attack = sc.nextInt();
         while (attack > 999 || attack < 0) {
             System.out.println("请输入合理的攻击值...");
             attack = sc.nextInt();
         }
+        //防御力判断
         System.out.println("\n您的防御力：");
-        int define = sc.nextInt();
+        int define;
+        while (!sc.hasNextInt()) {
+            System.out.println("请输入合理的防御值...");
+            sc = new Scanner(System.in);
+        }
+        define = sc.nextInt();
         while (define > 999 || define < 0) {
             System.out.println("请输入合理的防御值...");
             define = sc.nextInt();
